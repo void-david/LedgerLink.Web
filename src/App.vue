@@ -7,6 +7,7 @@
     <nav style="background: #333; padding: 1rem; margin-bottom: 20px;">
       <router-link to="/" style="color: white; margin-right: 15px; text-decoration: none;">Public Home</router-link>
       <router-link to="/admin" style="color: white; text-decoration: none;">Admin Dashboard</router-link>
+      <router-link to="/clients" style="color: white; text-decoration: none;">Clients Dashboard</router-link>
     </nav>
 
     <RouterView />

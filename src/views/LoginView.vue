@@ -54,7 +54,7 @@ const handleLogin = async () => {
 .login-card{ background: #1e1e1e; padding: 2rem; border-radius: 8px; width: 300px; border: 1px solid #333; }
 .form-group{ margin-bottom: 1rem; }
 label{ display: block; margin-bottom: 0.5rem; color: #ccc; }
-input{ width: 100%; padding: 0.5rem; background: #2d2d2d; border: 1px solid #444; color: white; }
+input{ width: 94%; padding: 0.5rem; background: #2d2d2d; border: 1px solid #444; color: white; }
 .btn-primary{ width: 100%; padding: 0.75rem; background: #007bff; color: white; border: none; cursor: pointer; margin-top: 10px;  }
 .error{ color: #ff6b6b; margin-top: 1rem; text-align: center; }
 </style>

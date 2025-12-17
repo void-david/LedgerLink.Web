@@ -2,9 +2,9 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
 export const useAuthStore = defineStore('auth', () =>{
-    // Initialize from LocalStorage so we stay loged in on refresh
-    const token = ref(localStorage.getItem('token') || '');
-    const userEmail = ref(localStorage.getItem('userEmail') || '');
+    // Initialize from sessionStorage so we stay loged in on refresh
+    const token = ref(sessionStorage.getItem('token') || '');
+    const userEmail = ref(sessionStorage.getItem('userEmail') || '');
 
     const isAutheticated = computed(() => !!token.value);
 
@@ -12,15 +12,15 @@ export const useAuthStore = defineStore('auth', () =>{
         token.value = newToken;
         userEmail.value = email;
         // Save to browser local storage
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('userEmail', email);
+        sessionStorage.setItem('token', newToken);
+        sessionStorage.setItem('userEmail', email);
     }
 
     function logout(){
         token.value = '';
         userEmail.value = '';
-        localStorage.removeItem('token');
-        localStorage.removeItem('userEmail');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('userEmail');
     }
 
     return { token, userEmail, isAutheticated, login, logout };
