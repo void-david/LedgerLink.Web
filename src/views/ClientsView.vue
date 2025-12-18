@@ -6,118 +6,102 @@ import type { Client } from '../types/Client';
 // State
 const clients = ref<Client[]>([]);
 const isEditing = ref(false);
-const form = ref({ id: 0, name: '', rfc: '', email: '' });
 const message = ref('');
 
-// Fetch Data
+// Empty form
+const form = ref({ id: 0, name: '', rfc: '', contactEmail: '', phoneNumber: '' });
+
+// Fetch data
 const loadClients = async () => {
-  const res = await apiClient.get<Client[]>('/Clients');
-  clients.value = res.data;
+  try{
+    const res = await apiClient.get<Client[]>('/Clients');
+    clients.value = res.data;
+  } catch (err) {console.log(err);}
 };
 
-// Handle Submit (Create OR Update)
+// Handle Submit 
 const saveClient = async () => {
-  try{
+  try {
     if (isEditing.value){
-      await apiClient.put(`/Clients/${form.value.id}`, form.value);
-      message.value = 'Updated successfully!';
+      // TODO: Update backend logic
     } else {
-      await apiClient.post('/Clients', form.value );
-      message.value = 'Created successfully!';
+      // Post
+      await apiClient.post('/Clients', form.value);
+      message.value = 'Client created successfully';
     }
     resetForm();
-    loadClients(); // Refresh list
-  } catch (err) {
-    console.error(err);
-    message.value = 'Operation failed.';
-  }
-};
-
-// Handle Delete
-const deleteClient = async (id: number) => {
-  if (!confirm('Are you sure you want to delete this client?')) return;
-  try {
-    await apiClient.delete(`/Clients/${id}`);
     loadClients();
-  } catch (err) { console.error(err); }
-};
+  } catch (err) {
+    console.log(err);
+    message.value = 'Operation failed. Check console';
+  }
+}
 
-// Handle Edit Click
-const editClient = (client: Client) => {
-  form.value = { ...client }; // Copy data to form
-  isEditing.value = true;
-};
-
-// Utility
 const resetForm = () => {
-  form.value = { id: 0, name: '', rfc: '', email: '' };
+  form.value = { id: 0, name: '', rfc: '', contactEmail: '', phoneNumber: '' };
   isEditing.value = false;
   setTimeout(() => message.value = '', 3000);
-};
+}
 
 onMounted(loadClients);
- 
+
 </script>
 
 <template>
   <div class="admin-container">
     <div class="header">
-      <h1>Admin Create Client Dashboard</h1>
-      <p class="subtitle">Manage your Clients</p>
+      <h1>Client Management</h1>
     </div>
 
     <div v-if="message" class="alert">{{ message }}</div>
-
+    
     <div class="dashboard-grid">
       <div class="card form-card">
-        <h2>{{ isEditing ? 'Edit Client' : 'Add New Client' }}</h2>
+        <h2>Add New Client</h2>
         <form @submit.prevent="saveClient">
+
           <div class="form-group">
-            <label>Client Name</label>
-            <input v-model="form.name" placeholder="e.g. Fulano Lopez"/>
+            <label>Company/Client Name</label>
+            <input v-model="form.name" required placeholder="e.g. Taqueria el norte"/>
           </div>
 
           <div class="form-group">
-            <label>Rfc</label>
-            <textarea v-model="form.rfc"></textarea>
+            <label>RFC</label>
+            <input v-model="form.rfc" required placeholder="XAXX010101000"/>
           </div>
 
           <div class="form-group">
-            <label>Client Email</label>
-            <textarea v-model="form.email"></textarea>          
+            <label>Contact Email</label>
+            <input v-model="form.contactEmail" type="email" required placeholder="contacto@gmail.com"/>
           </div>
 
-          <div class="button-group">
-            <button type="submit" class="btn btn-primary">
-              {{ isEditing ? 'Update Client' : 'Create Client' }}
-            </button>
-            <button v-if="isEditing" type="button" @click="resetForm" class="btn btn-secondary">
-              Cancel
-            </button>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input v-model="form.phoneNumber" required placeholder="55 1234 5678"/>
           </div>
+
+          <button type="submit" class="btn btn-primary">Create Client</button>
         </form>
       </div>
 
       <div class="card list-card">
-        <h2>Existing Clients</h2>
-        <table class="data-table">
+        <h2>Client Directory</h2>
+        <table>
           <thead>
             <tr>
-              <th>Contact</th>
-              <th>Rfc</th>
-              <th>Actions</th>
+              <th>Name / RFC</th>
+              <th>Contact Info</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="c in clients" :key="c.id">
               <td>
                 <div class="service-name">{{ c.name }}</div>
-                <small>{{ c.email }}</small>
+                <small>{{ c.rfc }}</small>
               </td>
-              <td>${{ c.rfc }}</td>
-              <td class="actions">
-                <button @click="editClient(c)" class="btn-icon edit">✎</button>
-                <button @click="deleteClient(c.id)" class="btn-icon delete">🗑</button>
+              <td>
+                <div>{{ c.contactEmail }}</div>
+                <small>{{ c.phoneNumber }}</small>
               </td>
             </tr>
           </tbody>
