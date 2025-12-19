@@ -18,11 +18,18 @@ const handleLogin = async () => {
         password: password.value
       });
 
-      // Save token to store
+      // Save token to store (sessionStorage)
       authStore.login(response.data.token, response.data.email);
+      
+      // Save role to sessionStorage
+      sessionStorage.setItem('userRole', response.data.role);
 
-      // Redirect to admin dashboard
-      router.push('/admin');
+      // ROUTING LOGIC based on the role we just received
+      if (response.data.role === 'Admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard'); // Redirects clients to their portal
+      }
   } catch (err){
       error.value = 'Invalid email or password';
   }
