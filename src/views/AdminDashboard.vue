@@ -2,18 +2,42 @@
 import { ref, onMounted } from 'vue';
 import apiClient from '../api/axios';
 import type { Service } from '../types/Service';
+import type { ServiceRequest } from '../types/ServiceRequest';
 
 // State
 const services = ref<Service[]>([]);
+const requests = ref<ServiceRequest[]>([]);
 const isEditing = ref(false);
 const form = ref({ id: 0, name: '', description: '', basePrice: 0 });
 const message = ref('');
 
-// Fetch Data
+// Fetch Data (Services)
 const loadServices = async () => {
   const res = await apiClient.get<Service[]>('/Services');
   services.value = res.data;
 };
+
+// Fetch Requests
+const loadRequests = async () => {
+  try {
+    const res = await apiClient.get<ServiceRequest[]>('/Requests');
+    requests.value = res.data;
+  } catch (err) {
+    console.log("Error loading requests", err);
+  }
+};
+
+// Update status of a request
+const updateStatus = async (id: number, newStatus: number) => {
+  try {
+    await apiClient.put(`/Requests/${id}/status`, { id, newStatus });
+    loadRequests();
+  } catch (err) {
+    console.log(err);
+    alert("Failed to update status");
+  }
+};
+
 
 // Handle Submit (Create OR Update)
 const saveService = async () => {
@@ -55,7 +79,10 @@ const resetForm = () => {
   setTimeout(() => message.value = '', 3000);
 };
 
-onMounted(loadServices);
+onMounted(() => {
+  loadServices();
+  loadRequests();
+});
  
 </script>
 
@@ -67,6 +94,36 @@ onMounted(loadServices);
     </div>
 
     <div v-if="message" class="alert">{{ message }}</div>
+
+    <div class="card" style="margin-bottom: 2rem;">
+      <h2>Incoming Requests</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Service</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="r in requests" :key="r.id">
+            <td>{{ r.clientName }}</td>
+            <td>{{ r.serviceName }}</td>
+            <td>{{ new Date(r.createdAt).toLocaleDateString() }}</td>
+            <td>
+              <span :class="['badge', r.status.toLowerCase()]">{{ r.status }}</span>
+            </td>
+            <td>
+              <button v-if="r.status === 'Pending'" @click="updateStatus(r.id, 1)" class="btn-sm">Review</button>
+              <button v-if="r.status === 'InReview'" @click="updateStatus(r.id, 2)" class="btn-sm success">Complete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-if="requests.length === 0" style="color: #888; margin-top: 10px;">No pending requests.</p> 
+    </div>
 
     <div class="dashboard-grid">
       <div class="card form-card">
@@ -152,6 +209,15 @@ onMounted(loadServices);
     border: 1px solid #333;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   }
+
+  .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+  .pending { background: #ffc107; color: black; }
+  .inreview { background: #17a2b8; color: white; }
+  .completed { background: #28a745; color: white; }
+  
+  .btn-sm { padding: 5px 10px; font-size: 0.8rem; margin-right: 5px; cursor: pointer; border-radius: 4px; border:none; background: #007bff; color: white; }
+  .btn-sm.success { background-color: #28a745; }
+
 
   .form-group { margin-bottom: 1rem; }
   label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #bbb; }

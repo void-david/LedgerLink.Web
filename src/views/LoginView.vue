@@ -19,7 +19,7 @@ const handleLogin = async () => {
       });
 
       // Save token to store (sessionStorage)
-      authStore.login(response.data.token, response.data.email);
+      authStore.login(response.data.token, response.data.email, response.data.role);
       
       // Save role to sessionStorage
       sessionStorage.setItem('userRole', response.data.role);
@@ -39,7 +39,7 @@ const handleLogin = async () => {
 <template>
     <div class="login-container">
       <div class="login-card">
-        <h2>Admin Login</h2>
+        <h2>Login</h2>
         <form @submit.prevent="handleLogin">
           <div class="form-group">
             <label>Email</label>
