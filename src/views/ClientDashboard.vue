@@ -105,7 +105,9 @@ onMounted(loadData);
 .dashboard-container { padding: 2rem; color: #fff; }
 .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
 .card { background: #1e1e1e; padding: 1.5rem; border-radius: 8px; border: 1px solid #333; }
-select, textarea { width: 100%; padding: 0.5rem; background: #2d2d2d; color: white; border: 1px solid #444; margin-bottom: 1rem; }
+select { width: 100%; padding: 0.5rem; background: #2d2d2d; color: white; border: 1px solid #444; margin-bottom: 1rem; }
+textarea { width: 97%; padding: 0.5rem; background: #2d2d2d; color: white; border: 1px solid #444; margin-bottom: 1rem; }
+
 .btn-primary { width: 100%; padding: 0.75rem; background: #007bff; color: white; border: none; cursor: pointer; }
 .data-table { width: 100%; text-align: left; border-collapse: collapse; }
 .data-table td { padding: 0.5rem; border-bottom: 1px solid #333; } 

@@ -4,5 +4,6 @@ export interface ServiceRequest{
     price: number;
     status: string;
     createdAt: string;
+    notes: string;
     clientName?: string; // Might not have a client attached
 }

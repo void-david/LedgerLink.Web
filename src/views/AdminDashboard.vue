@@ -10,6 +10,13 @@ const requests = ref<ServiceRequest[]>([]);
 const isEditing = ref(false);
 const form = ref({ id: 0, name: '', description: '', basePrice: 0 });
 const message = ref('');
+const selectedRequest = ref<ServiceRequest | null>(null);
+const showModal = ref(false);
+
+const openRequest = (req: ServiceRequest) => {
+  selectedRequest.value = req;
+  showModal.value = true;
+}
 
 // Fetch Data (Services)
 const loadServices = async () => {
@@ -109,7 +116,9 @@ onMounted(() => {
         </thead>
         <tbody>
           <tr v-for="r in requests" :key="r.id">
-            <td>{{ r.clientName }}</td>
+            <td @click="openRequest(r)" style="cursor: pointer; color: #007bff; text-decoration: underline;">
+              {{ r.clientName }}
+            </td>
             <td>{{ r.serviceName }}</td>
             <td>{{ new Date(r.createdAt).toLocaleDateString() }}</td>
             <td>
@@ -182,9 +191,43 @@ onMounted(() => {
       </div>
     </div>
   </div>
+
+  <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+    <div class="modal-content">
+      <h2>Request Details</h2>
+      <div v-if="selectedRequest">
+        <p><strong>Client:</strong> {{ selectedRequest.clientName }}</p>
+        <p><strong>Service:</strong> {{ selectedRequest.serviceName }}</p>
+        <p><strong>Date:</strong> {{ new Date(selectedRequest.createdAt).toLocaleString() }}</p>
+
+        <hr />
+
+        <h3>Client Notes:</h3>
+        <p class="notes-box">{{ selectedRequest.notes || "No notes provided." }}</p>
+
+        <hr />
+
+        <h3>Manage Status:</h3>
+        <div class="status-actions">
+          <button @click="updateStatus(selectedRequest.id, 0)" class="btn-sm pending">Mark Pending</button>
+          <button @click="updateStatus(selectedRequest.id, 1)" class="btn-sm review">Mark In Review</button>
+          <button @click="updateStatus(selectedRequest.id, 2)" class="btn-sm success">Mark Completed</button>
+        </div>
+
+        <button class="btn-close" @click="showModal = false">Close</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+  .modal-content { background: #1e1e1e; padding: 2rem; border-radius: 8px; width: 500px; max-width: 90%; border: 1px solid #444; color: white; }
+  .notes-box { background: #2d2d2d; padding: 1rem; border-radius: 4px; font-style: italic; color: #ccc; }
+  .status-actions { display: flex; gap: 10px; margin-bottom: 20px; }
+  .btn-close { width: 100%; padding: 10px; background: #444; border: none; color: white; cursor: pointer; }
+
   /* Dark mode styling */
   .admin-container{
     max-width: 1200px;
