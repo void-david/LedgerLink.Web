@@ -6,4 +6,6 @@ export interface ServiceRequest{
     createdAt: string;
     notes: string;
     clientName?: string; // Might not have a client attached
+    documentId?: number;
+    documentName?: string;
 }
