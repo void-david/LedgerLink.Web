@@ -18,6 +18,32 @@ const openRequest = (req: ServiceRequest) => {
   showModal.value = true;
 }
 
+// Download files logic
+const downloadFile = async(docId: number, fileName: string) => {
+  try {
+    // Request the file as Blob (Binary Large Object)
+    const response = await apiClient.get(`/Documents/${docId}`, {
+      responseType: 'blob'
+    });
+
+    // Create a temporary link to trigger browser's download process
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName); // Force the filename
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error("Download failed", err);
+    alert("Failed to download the file.");
+  }
+};
+
 // Fetch Data (Services)
 const loadServices = async () => {
   const res = await apiClient.get<Service[]>('/Services');
@@ -39,6 +65,13 @@ const updateStatus = async (id: number, newStatus: number) => {
   try {
     await apiClient.put(`/Requests/${id}/status`, { id, newStatus });
     loadRequests();
+
+    // Close modal if open to refresh state or reload the data
+    if (selectedRequest.value?.id === id){
+      // Update the local selected request status immediately for ui feedback
+      selectedRequest.value.status = newStatus === 1 ? 'InReview' : 'Completed';
+    }
+
   } catch (err) {
     console.log(err);
     alert("Failed to update status");
@@ -207,6 +240,19 @@ onMounted(() => {
 
         <hr />
 
+        <h3>Attached Documents:</h3>
+        <div v-if="selectedRequest.documents && selectedRequest.documents.length > 0">
+          <ul class="doc-list">
+            <li v-for="doc in selectedRequest.documents" :key="doc.id">
+              <span>📄 {{ doc.fileName }}</span>
+              <button @click="downloadFile(doc.id, doc.fileName)" class="btn-download">Download</button>
+            </li>
+          </ul>
+        </div>
+        <p v-else class="no-docs">No documents attached.</p>
+
+        <hr />
+
         <h3>Manage Status:</h3>
         <div class="status-actions">
           <button @click="updateStatus(selectedRequest.id, 0)" class="btn-sm pending">Mark Pending</button>
@@ -221,57 +267,48 @@ onMounted(() => {
 </template>
 
 <style scoped>
-
+  /* Modal Styles */
   .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
   .modal-content { background: #1e1e1e; padding: 2rem; border-radius: 8px; width: 500px; max-width: 90%; border: 1px solid #444; color: white; }
-  .notes-box { background: #2d2d2d; padding: 1rem; border-radius: 4px; font-style: italic; color: #ccc; }
+  
+  .notes-box { background: #2d2d2d; padding: 1rem; border-radius: 4px; font-style: italic; color: #ccc; margin-bottom: 1rem; }
+  
+  /* Document List Styles */
+  .doc-list { list-style: none; padding: 0; margin-bottom: 1rem; }
+  .doc-list li { display: flex; justify-content: space-between; align-items: center; background: #2d2d2d; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 4px; border: 1px solid #444; }
+  .btn-download { background: #17a2b8; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+  .btn-download:hover { background: #138496; }
+  .no-docs { color: #888; font-style: italic; margin-bottom: 1rem; }
+
   .status-actions { display: flex; gap: 10px; margin-bottom: 20px; }
   .btn-close { width: 100%; padding: 10px; background: #444; border: none; color: white; cursor: pointer; }
+  .btn-close:hover { background: #555; }
 
-  /* Dark mode styling */
-  .admin-container{
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    color: #e0e0e0;
-  }
-
+  /* Main Container */
+  .admin-container{ max-width: 1200px; margin: 0 auto; padding: 2rem; color: #e0e0e0; }
   .header { margin-bottom: 2rem; border-bottom: 1px solid #333; padding-bottom: 1rem; }
   .subtitle { color: #888; }
 
-  .dashboard-grid{
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 2rem;
-  }
+  /* Dashboard Grid */
+  .dashboard-grid{ display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; }
+  .card{ background: #1e1e1e; padding: 1.5rem; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); }
 
-  .card{
-    background: #1e1e1e;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #333;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  }
-
+  /* Status Badges */
   .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
   .pending { background: #ffc107; color: black; }
   .inreview { background: #17a2b8; color: white; }
   .completed { background: #28a745; color: white; }
   
+  /* Buttons */
   .btn-sm { padding: 5px 10px; font-size: 0.8rem; margin-right: 5px; cursor: pointer; border-radius: 4px; border:none; background: #007bff; color: white; }
   .btn-sm.success { background-color: #28a745; }
+  .btn-sm.pending { background-color: #ffc107; color: black; }
+  .btn-sm.review { background-color: #17a2b8; }
 
-
+  /* Forms */
   .form-group { margin-bottom: 1rem; }
   label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #bbb; }
-  input, textarea {
-    width: 94%;
-    padding: 0.75rem;
-    background: #2d2d2d;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 4px;
-  }
+  input, textarea { width: 94%; padding: 0.75rem; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 4px; }
   input:focus, textarea:focus { outline: 2px solid #007bff; border-color: transparent; }
 
   .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
@@ -279,6 +316,7 @@ onMounted(() => {
   .btn-primary:hover { background: #0056b3; }
   .btn-secondary { background: #444; color: white; margin-left: 10px; }
 
+  /* Tables */
   .data-table { width: 100%; border-collapse: collapse; }
   .data-table th { text-align: left;  border-bottom: 1px solid #444; padding: 0.5rem; color: #888; }
   .data-table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #2a2a2a; }
@@ -288,12 +326,9 @@ onMounted(() => {
   .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; }
   .edit { color: #ffc107; }
   .delete { color: #dc3545; }
-
   .alert { background: #28a745; color: white; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
 
   @media (max-width: 768px){
     .dashboard-grid { grid-template-columns: 1fr; }
   }
-
- 
 </style>

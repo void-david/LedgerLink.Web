@@ -4,8 +4,7 @@ export interface ServiceRequest{
     price: number;
     status: string;
     createdAt: string;
-    notes: string;
+    notes?: string;
     clientName?: string; // Might not have a client attached
-    documentId?: number;
-    documentName?: string;
+    documents?: { id: number; fileName: string }[];
 }
