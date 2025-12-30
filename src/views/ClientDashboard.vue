@@ -33,6 +33,28 @@ const handleFileChange = (event: Event) => {
     }
 };
 
+// NEW: Download File Logic
+const downloadFile = async (docId: number, fileName: string) => {
+    try {
+        const response = await apiClient.get(`/Documents/${docId}`, { responseType: 'blob' });
+        
+        // Create a blob link to trigger download
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error("Download failed", err);
+        alert("Failed to download file.");
+    }
+};
+
 // Submit Request
 const submitRequest = async () => {
     if (!selectedServiceId.value) return;
@@ -82,7 +104,7 @@ onMounted(loadData);
 <template>
     <div class="dashboard-container">
         <div class="header">
-            <h1>My portal</h1>
+            <h1>My Portal</h1>
             <p>Request new services and track status.</p>
         </div>
 
@@ -133,7 +155,7 @@ onMounted(loadData);
                             <th>Service</th>
                             <th>Date</th>
                             <th>Status</th>
-                        </tr>
+                            <th>Files</th> </tr>
                     </thead>
                     <tbody>
                         <tr v-for="r in myRequests" :key="r.id">
@@ -141,6 +163,16 @@ onMounted(loadData);
                             <td>{{ new Date(r.createdAt).toLocaleDateString() }}</td>
                             <td>
                                 <span :class="['badge', r.status.toLowerCase()]">{{ r.status }}</span>
+                            </td>
+                            <td>
+                                <div v-if="r.documents && r.documents.length > 0">
+                                    <div v-for="doc in r.documents" :key="doc.id" class="file-link">
+                                        <button @click="downloadFile(doc.id, doc.fileName)" class="btn-link">
+                                            📄 {{ doc.fileName }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <span v-else class="text-muted">-</span>
                             </td>
                         </tr>
                     </tbody>
@@ -185,7 +217,21 @@ textarea { width: 95%; padding: 0.5rem; background: #2d2d2d; color: white; borde
 
 .data-table { width: 100%; text-align: left; border-collapse: collapse; }
 .data-table th { border-bottom: 1px solid #444; padding: 0.5rem; color: #888; }
-.data-table td { padding: 0.5rem; border-bottom: 1px solid #333; } 
+.data-table td { padding: 0.5rem; border-bottom: 1px solid #333; vertical-align: top; } 
+
+/* New Styles for File Links */
+.file-link { margin-bottom: 4px; }
+.btn-link { 
+    background: none; 
+    border: none; 
+    color: #007bff; 
+    cursor: pointer; 
+    text-decoration: underline; 
+    font-size: 0.9rem;
+    padding: 0;
+}
+.btn-link:hover { color: #0056b3; }
+.text-muted { color: #666; font-style: italic; }
 
 @media (max-width: 768px) {
     .grid { grid-template-columns: 1fr; }
